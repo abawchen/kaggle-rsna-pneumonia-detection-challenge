@@ -113,3 +113,34 @@ def map_iou(boxes_true, boxes_pred, scores, thresholds = [0.4, 0.45, 0.5, 0.55, 
         map_total += m
 
     return map_total / len(thresholds)
+
+
+def predict_submit(model, image_filepaths, filepath, min_conf=.98):
+    data = []
+    for image_filepath in image_filepaths:
+        ds = pydicom.read_file(image_filepath)
+        image = ds.pixel_array
+
+        if len(image.shape) != 3 or image.shape[2] != 3:
+            image = np.stack((image,) * 3, -1)
+
+        patient_id = os.path.splitext(os.path.basename(image_filepath))[0]
+
+        results = model.detect([image])
+        r = results[0]
+
+        assert(len(r['rois']) == len(r['class_ids']) == len(r['scores']))
+
+        pred_str = ''
+        for i in range(len('rois')):
+            score = r['scores'][i]
+            roi = r['rois'][i]
+            pred_str += ' '.join([str(v) for v in [
+                score, roi[1], roi[0], roi[3]-roi[1], roi[2]-roi[0]
+            ]])
+        data.append([patient_id, pred_str])
+
+    df_submit = pd.DataFrame(data=data, columns=['patient_id', 'pred_string'])
+    df_submit.to_csv(filepath, index=False)
+
+    return df_submit
