@@ -5,6 +5,9 @@ import os
 import pydicom
 
 
+from tqdm import tqdm
+
+
 def get_image(patient_id, image_dir):
     filename = os.path.join(image_dir, f'{patient_id}.dcm')
     dcm_data = pydicom.read_file(filename)
@@ -64,7 +67,7 @@ def iou(box1, box2):
         return intersect / union
 
 
-def map_iou(boxes_true, boxes_pred, scores, thresholds = [0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]):
+def map_iou(boxes_true, boxes_pred, scores, thresholds = [0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75], min_conf=.98):
     """
     Mean average precision at differnet intersection over union (IoU) threshold
 
@@ -101,7 +104,10 @@ def map_iou(boxes_true, boxes_pred, scores, thresholds = [0.4, 0.45, 0.5, 0.55, 
             matched = False
             for j, bp in enumerate(boxes_pred):
                 miou = iou(bt, bp)
-                if miou >= t and not matched and j not in matched_bt:
+                if miou >= t \
+                    and not matched \
+                    and j not in matched_bt \
+                    and scores[j] > min_conf:
                     matched = True
                     tp += 1 # bt is matched for the first time, count as TP
                     matched_bt.add(j)
@@ -117,14 +123,14 @@ def map_iou(boxes_true, boxes_pred, scores, thresholds = [0.4, 0.45, 0.5, 0.55, 
 
 def predict_submit(model, image_filepaths, filepath, min_conf=.98):
     data = []
-    for image_filepath in image_filepaths:
+    for image_filepath in tqdm(image_filepaths):
         ds = pydicom.read_file(image_filepath)
         image = ds.pixel_array
 
         if len(image.shape) != 3 or image.shape[2] != 3:
             image = np.stack((image,) * 3, -1)
 
-        patient_id = os.path.splitext(os.path.basename(image_id))[0]
+        patient_id = os.path.splitext(os.path.basename(image_filepath))[0]
 
         results = model.detect([image])
         r = results[0]
