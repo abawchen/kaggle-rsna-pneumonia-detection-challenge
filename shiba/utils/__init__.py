@@ -138,12 +138,13 @@ def predict_submit(model, image_filepaths, filepath, min_conf=.98):
         assert(len(r['rois']) == len(r['class_ids']) == len(r['scores']))
 
         pred_str = ''
-        for i in range(len('rois')):
+        for i in range(len(r['rois'])):
             score = r['scores'][i]
-            roi = r['rois'][i]
-            pred_str += ' '.join([str(v) for v in [
-                score, roi[1], roi[0], roi[3]-roi[1], roi[2]-roi[0]
-            ]])
+            if score > min_conf:
+                roi = r['rois'][i]
+                pred_str += ' '.join([str(v) for v in [
+                    score, roi[1], roi[0], roi[3]-roi[1], roi[2]-roi[0]
+                ]])
         data.append([patient_id, pred_str])
 
     df_submit = pd.DataFrame(data=data, columns=['patient_id', 'pred_string'])
