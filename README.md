@@ -1,13 +1,25 @@
 # kaggle-rsna-pneumonia-detection-challenge
 
-### CNN References:
+### CNN
 
 - [關於影像辨識，所有你應該知道的深度學習模型 | Medium @2018-02-04](https://medium.com/@syshen/%E7%89%A9%E9%AB%94%E5%81%B5%E6%B8%AC-object-detection-740096ec4540)
 - [一文讀懂：R-CNN、Fast R-CNN、Faster R-CNN、YOLO、SSD @2018-05-02](https://hk.saowen.com/a/ea0b8f4a0266432ae2df9b75548929b77393a26141d06a70f8a3061025462b77)
 - [如何评价 Kaiming He 最新的 Mask R-CNN? | 知乎 @2017-03-23](https://www.zhihu.com/question/57403701)
 - [Splash of Color: Instance Segmentation with Mask R-CNN and TensorFlow | Medium @2018-05-20](https://engineering.matterport.com/splash-of-color-instance-segmentation-with-mask-r-cnn-and-tensorflow-7c761e238b46)
 - [Deep Learning in Computer Vision | Coursera](https://zh-tw.coursera.org/lecture/deep-learning-in-computer-vision/region-based-convolutional-neural-network-yU6QP)
+- [mask rcnn解读](https://blog.csdn.net/u013010889/article/details/78588227)
+- [14 Design Patterns To Improve Your Convolutional Neural Networks @2017-05-22](https://www.topbots.com/14-design-patterns-improve-convolutional-neural-network-cnn-architecture/)
 
+### FCN
+- [FCN 要點解釋](https://blog.csdn.net/Fate_fjh/article/details/53446630)
+- [語義分割-全卷積神經網絡(FCN)](https://kknews.cc/zh-tw/news/kz9zalv.html)
+- [FCN的学习及理解（Fully Convolutional Networks for Semantic Segmentation）](https://blog.csdn.net/qq_36269513/article/details/80420363)
+- [FCN 简单梳理](https://blog.csdn.net/xg123321123/article/details/53092154)
+
+### General NN
+- [Weight initialization @2017-03-16](https://www.hksilicon.com/articles/1292771)
+- [Advanced Tips for Deep Learning](https://www.youtube.com/watch?v=vVUkEbxltBw&feature=youtu.be): Batch Normalization | SELU | Hyperparameters
+    
 
 ### Keras Tutorial
 
@@ -91,4 +103,7 @@
 	Trainable params: 8,933
 	Non-trainable params: 0
 	```
+- [keras版faster-rcnn算法详解](https://zhuanlan.zhihu.com/p/28585873)
+- [Keras版Faster-RCNN代码学习](https://blog.csdn.net/qq_34564612/article/details/78881689)
+- [Mask R-CNN tensorflow/keras的配置介紹、程式碼詳解與訓練自己的資料集演示](https://codertw.com/%E7%A8%8B%E5%BC%8F%E8%AA%9E%E8%A8%80/515636/#outline__2_1_1)
 	
