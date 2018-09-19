@@ -8,10 +8,10 @@ from skimage.transform import resize
 # https://goo.gl/Jw8D65
 class DataGenerator(keras.utils.Sequence):
 
-    def __init__(self, folder, patient_ids, data, batch_size=32, image_size=256, shuffle=True, augment=False, predict=False):
+    def __init__(self, folder, patient_ids, df, batch_size=32, image_size=256, shuffle=True, augment=False, predict=False):
         self.folder = folder
         self.patient_ids = patient_ids
-        self.data = data
+        self.df = df
         self.batch_size = batch_size
         self.image_size = image_size
         self.shuffle = shuffle
@@ -26,10 +26,10 @@ class DataGenerator(keras.utils.Sequence):
         # create empty mask
         msk = np.zeros(img.shape)
         # if image contains pneumonia
-        data = self.data[
-            (self.data.patientId == patient_id) & (self.data.Targe == 1)
+        df = self.df[
+            (self.df.patientId == patient_id) & (self.df.Targe == 1)
         ]
-        for _, row in data.iterrows():
+        for _, row in df.iterrows():
             # add 1's at the location of the pneumonia
             msk[row.y:row.y+row.h, row.x:row.x+row.w] = 1
         # resize both image and mask
@@ -44,7 +44,8 @@ class DataGenerator(keras.utils.Sequence):
         msk = np.expand_dims(msk, -1)
         return img, msk
 
-    def __loadpredict__(self, filename):
+    def __loadpredict__(self, patient_id):
+        filename = f'{patient_id}.dcm'
         # load dicom file as numpy array
         img = pydicom.dcmread(os.path.join(self.folder, filename)).pixel_array
         # resize image
@@ -55,14 +56,16 @@ class DataGenerator(keras.utils.Sequence):
 
     def __getitem__(self, index):
         # select batch
-        patients = self.data[index*self.batch_size:(index+1)*self.batch_size]
+        patient_ids = self.patient_ids[
+            index*self.batch_size:(index+1)*self.batch_size
+        ]
         # predict mode: return images and filenames
         if self.predict:
             # load files
-            imgs = [self.__loadpredict__(filename) for filename in filenames]
+            imgs = [self.__loadpredict__(patient_id) for patient_id in patient_ids]
             # create numpy batch
             imgs = np.array(imgs)
-            return imgs, filenames
+            return imgs, patient_ids
         # train mode: return images and masks
         else:
             # load files
@@ -81,7 +84,7 @@ class DataGenerator(keras.utils.Sequence):
     def __len__(self):
         if self.predict:
             # return everything
-            return int(np.ceil(len(self.filenames) / self.batch_size))
+            return int(np.ceil(self.df.shape[0]) / self.batch_size))
         else:
             # return full batches only
-            return int(len(self.filenames) / self.batch_size)
+            return int(self.df.shape[0] / self.batch_size)
