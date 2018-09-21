@@ -66,33 +66,23 @@ def iou(box1, box2):
         union = area1 + area2 - intersect
         return intersect / union
 
-
-def map_iou(boxes_true, boxes_pred, scores, thresholds = [0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75], min_conf=.98):
+def map_iou(boxes_true, boxes_pred, thresholds=[0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]):
     """
     Mean average precision at differnet intersection over union (IoU) threshold
 
     Args:
-        boxes_true: Mx4 numpy array of ground true bounding boxes of one image.
+        boxes_true: Aarray of ground true bounding boxes of one image.
                     bbox format: (x1, y1, w, h)
-        boxes_pred: Nx4 numpy array of predicted bounding boxes of one image.
+        boxes_pred: Array of predicted bounding boxes of one image.
                     bbox format: (x1, y1, w, h)
-        scores:     length N numpy array of scores associated with predicted bboxes
         thresholds: IoU shresholds to evaluate mean average precision on
+
     Retruns:
         map: mean average precision of the image
     """
 
-    # According to the introduction, images with no ground truth bboxes will not be
-    # included in the map score unless there is a false positive detection (?)
-    # return None if both are empty, don't count the image in final evaluation (?)
     if len(boxes_true) == 0 and len(boxes_pred) == 0:
         return None
-
-    assert boxes_true.shape[1] == 4 or boxes_pred.shape[1] == 4, "boxes should be 2D arrays with shape[1]=4"
-    if len(boxes_pred):
-        assert len(scores) == len(boxes_pred), "boxes_pred and scores should be same length"
-        # sort boxes_pred by scores in decreasing order
-        boxes_pred = boxes_pred[np.argsort(scores)[::-1], :]
 
     map_total = 0
 
@@ -106,47 +96,18 @@ def map_iou(boxes_true, boxes_pred, scores, thresholds = [0.4, 0.45, 0.5, 0.55, 
                 miou = iou(bt, bp)
                 if miou >= t \
                     and not matched \
-                    and j not in matched_bt \
-                    and scores[j] > min_conf:
+                    and j not in matched_bt:
                     matched = True
-                    tp += 1 # bt is matched for the first time, count as TP
+                    # bt is matched for the first time, count as TP
+                    tp += 1
                     matched_bt.add(j)
             if not matched:
-                fn += 1 # bt has no match, count as FN
+                # bt has no match, count as FN
+                fn += 1
 
-        fp = len(boxes_pred) - len(matched_bt) # FP is the bp that not matched to any bt
+        # FP is the bp that not matched to any bt
+        fp = len(boxes_pred) - len(matched_bt)
         m = tp / (tp + fn + fp)
         map_total += m
 
     return map_total / len(thresholds)
-
-
-def predict_submit(model, image_filepaths, filepath, min_conf=.98):
-    data = []
-    for image_filepath in tqdm(image_filepaths):
-        ds = pydicom.read_file(image_filepath)
-        image = ds.pixel_array
-
-        if len(image.shape) != 3 or image.shape[2] != 3:
-            image = np.stack((image,) * 3, -1)
-
-        patient_id = os.path.splitext(os.path.basename(image_filepath))[0]
-
-        results = model.detect([image])
-        r = results[0]
-
-        assert(len(r['rois']) == len(r['class_ids']) == len(r['scores']))
-
-        pred_str = ''
-        for i in range(len('rois')):
-            score = r['scores'][i]
-            roi = r['rois'][i]
-            pred_str += ' '.join([str(v) for v in [
-                score, roi[1], roi[0], roi[3]-roi[1], roi[2]-roi[0]
-            ]])
-        data.append([patient_id, pred_str])
-
-    df_submit = pd.DataFrame(data=data, columns=['patient_id', 'pred_string'])
-    df_submit.to_csv(filepath, index=False)
-
-    return df_submit
